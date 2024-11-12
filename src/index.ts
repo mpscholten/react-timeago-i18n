@@ -112,9 +112,10 @@ const TimeAgo = memo<TimeAgoProps>(
       ...useContext(Context),
       ...props,
     };
-
-    const [text, setText] = useState("");
-    const [unit, setUnit] = useState<Unit>();
+    const dateObject = useMemo(
+      () => (date instanceof Date ? date : new Date(date)),
+      [date]
+    );
 
     const formatter = useMemo(
       () =>
@@ -125,11 +126,6 @@ const TimeAgo = memo<TimeAgoProps>(
           ...formatOptions,
         }),
       [locale, formatOptions]
-    );
-
-    const dateObject = useMemo(
-      () => (date instanceof Date ? date : new Date(date)),
-      [date]
     );
 
     const formatDate = useCallback(
@@ -145,6 +141,16 @@ const TimeAgo = memo<TimeAgoProps>(
       },
       [formatter, hideSeconds, pastSecondsText, futureSecondsText]
     );
+
+    const [text, setText] = useState<string>(() => {
+      const [value, newUnit] = timeSince(
+        dateObject,
+        roundStrategy,
+        allowFuture
+      );
+      return formatDate(value, newUnit);
+    });
+    const [unit, setUnit] = useState<Unit>();
 
     const doUpdate = useCallback(() => {
       const [value, newUnit] = timeSince(
